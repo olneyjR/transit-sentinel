@@ -53,4 +53,9 @@ dagster_home/
 
 # Temporary
 tmp/
-temp/
+temp/data/
+venv/
+logs/
+*.duckdb
+*.pyc
+__pycache__/
