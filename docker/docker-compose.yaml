@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  # Redpanda - Kafka-compatible streaming platform
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:v23.3.5
+    container_name: transit-sentinel-redpanda
+    command:
+      - redpanda
+      - start
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092,external://localhost:19092
+      - --pandaproxy-addr
+      - internal://0.0.0.0:8082,external://0.0.0.0:18082
+      - --advertise-pandaproxy-addr
+      - internal://redpanda:8082,external://localhost:18082
+      - --schema-registry-addr
+      - internal://0.0.0.0:8081,external://0.0.0.0:18081
+      - --rpc-addr
+      - redpanda:33145
+      - --advertise-rpc-addr
+      - redpanda:33145
+      - --smp
+      - '1'
+      - --memory
+      - 1G
+      - --mode
+      - dev-container
+      - --default-log-level=info
+    ports:
+      - "9092:9092"    # Kafka API (internal)
+      - "19092:19092"  # Kafka API (external)
+      - "18081:18081"  # Schema Registry
+      - "18082:18082"  # Pandaproxy (REST)
+    networks:
+      - transit-sentinel
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Grafana - Metrics visualization
+  grafana:
+    image: grafana/grafana:10.3.1
+    container_name: transit-sentinel-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana-storage:/var/lib/grafana
+    networks:
+      - transit-sentinel
+    depends_on:
+      - redpanda
+
+networks:
+  transit-sentinel:
+    driver: bridge
+
+volumes:
+  grafana-storage:

@@ -1,0 +1,149 @@
+# Transit Agency Configurations
+# Each agency has specific GTFS-RT feed URLs and geographic constraints
+
+agencies:
+  
+  # TriMet (Portland, Oregon) - Default agency, no API key required
+  trimet:
+    name: "TriMet"
+    location: "Portland, OR, USA"
+    timezone: "America/Los_Angeles"
+    enabled: true
+    
+    # GTFS-RT feeds (public, no authentication)
+    feeds:
+      vehicle_positions: "https://developer.trimet.org/ws/gtfsrt/VehiclePositions"
+      trip_updates: "https://developer.trimet.org/ws/gtfsrt/TripUpdate"
+      alerts: "https://developer.trimet.org/ws/gtfsrt/Alerts"
+    
+    # Static GTFS via Transitland
+    transitland_onestop_id: "o-c20n-trimet"
+    
+    # Geographic bounds for data quality validation
+    geographic_bounds:
+      # Portland metro area
+      min_latitude: 45.2
+      max_latitude: 45.7
+      min_longitude: -123.0
+      max_longitude: -122.3
+    
+    # Weather monitoring center point
+    weather_center:
+      latitude: 45.5152
+      longitude: -122.6784
+    
+    # Route types to monitor
+    route_types:
+      - 0  # Tram/Light Rail (MAX)
+      - 1  # Subway/Metro
+      - 3  # Bus
+  
+  # MTA (New York City)
+  mta:
+    name: "MTA New York City Transit"
+    location: "New York, NY, USA"
+    timezone: "America/New_York"
+    enabled: false  # Enable when you have API key
+    
+    # Requires MTA API key: https://api.mta.info/
+    api_key_required: true
+    feeds:
+      # Example for subway - many feeds available
+      vehicle_positions: "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
+      trip_updates: "https://api-endpoint.mta.info/Dataservice/mtagtfsfeeds/nyct%2Fgtfs-ace"
+    
+    transitland_onestop_id: "o-dr5r-nyct"
+    
+    geographic_bounds:
+      # NYC metro area
+      min_latitude: 40.5
+      max_latitude: 40.9
+      min_longitude: -74.3
+      max_longitude: -73.7
+    
+    weather_center:
+      latitude: 40.7128
+      longitude: -74.0060
+    
+    route_types:
+      - 1  # Subway
+      - 3  # Bus
+  
+  # BART (San Francisco Bay Area)
+  bart:
+    name: "Bay Area Rapid Transit"
+    location: "San Francisco Bay Area, CA, USA"
+    timezone: "America/Los_Angeles"
+    enabled: false
+    
+    feeds:
+      vehicle_positions: "http://api.bart.gov/gtfsrt/tripupdate.aspx"
+      trip_updates: "http://api.bart.gov/gtfsrt/tripupdate.aspx"
+      alerts: "http://api.bart.gov/gtfsrt/alerts.aspx"
+    
+    transitland_onestop_id: "o-9q9-bart"
+    
+    geographic_bounds:
+      # Bay Area
+      min_latitude: 37.4
+      max_latitude: 38.0
+      min_longitude: -122.5
+      max_longitude: -121.7
+    
+    weather_center:
+      latitude: 37.7749
+      longitude: -122.4194
+    
+    route_types:
+      - 1  # Metro/Subway
+  
+  # TfL (Transport for London)
+  tfl:
+    name: "Transport for London"
+    location: "London, UK"
+    timezone: "Europe/London"
+    enabled: false
+    
+    # Requires TfL API key: https://api.tfl.gov.uk/
+    api_key_required: true
+    feeds:
+      # TfL uses different API structure, custom adapter needed
+      vehicle_positions: "https://api.tfl.gov.uk/Line/Mode/tube,dlr,overground/Arrivals"
+    
+    transitland_onestop_id: "o-gcpvj0-tfl"
+    
+    geographic_bounds:
+      # Greater London
+      min_latitude: 51.3
+      max_latitude: 51.7
+      min_longitude: -0.5
+      max_longitude: 0.3
+    
+    weather_center:
+      latitude: 51.5074
+      longitude: -0.1278
+    
+    route_types:
+      - 1  # Tube/Metro
+      - 2  # Rail (Overground, DLR)
+      - 3  # Bus
+
+# Default agency to use
+default_agency: "trimet"
+
+# Multi-agency mode (future feature)
+multi_agency_mode: false
+
+# Agency-specific notes
+notes: |
+  TriMet is the recommended default agency because:
+  1. No API key required for GTFS-RT feeds
+  2. Public, well-documented feeds
+  3. Reliable uptime and data quality
+  4. Good coverage of route types (bus, light rail)
+  
+  To enable other agencies:
+  1. Set 'enabled: true' for the desired agency
+  2. Obtain API key if required (api_key_required: true)
+  3. Add API key to environment variables or secure config
+  4. Update the default_agency setting

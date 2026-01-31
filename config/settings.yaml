@@ -1,0 +1,102 @@
+# Transit Sentinel Configuration
+# Main settings for the real-time geospatial intelligence pipeline
+
+# Project metadata
+project:
+  name: "transit-sentinel"
+  version: "1.0.0"
+  description: "Real-time geospatial intelligence for urban mobility"
+
+# Redpanda/Kafka configuration
+redpanda:
+  bootstrap_servers: "localhost:9092"
+  topics:
+    vehicle_positions: "transit.vehicle.positions"
+    trip_updates: "transit.trip.updates"
+    weather_observations: "transit.weather.observations"
+    data_quality_alerts: "transit.quality.alerts"
+  producer:
+    acks: "all"  # Ensure no data loss
+    compression_type: "snappy"
+    max_in_flight_requests: 5
+    retries: 3
+  consumer:
+    group_id: "transit-sentinel-consumer"
+    auto_offset_reset: "latest"
+    enable_auto_commit: true
+    max_poll_records: 500
+
+# DuckDB configuration
+duckdb:
+  database_path: "data/transit_sentinel.duckdb"
+  extensions:
+    - spatial  # For geospatial queries
+  memory_limit: "2GB"
+  threads: 4
+  
+  # Medallion architecture layers
+  schemas:
+    bronze: "bronze"      # Raw ingested data
+    silver: "silver"      # Validated, cleaned data
+    gold: "gold"          # Analytics-ready aggregations
+
+# Data quality thresholds
+data_quality:
+  vehicle_position:
+    max_speed_kmh: 120        # Maximum realistic vehicle speed
+    min_speed_kmh: -5         # Allow slight negative for reversing
+    max_position_age_seconds: 300  # 5 minutes staleness limit
+    coordinate_bounds:
+      # Reasonable global bounds, agency configs will narrow these
+      min_latitude: -90.0
+      max_latitude: 90.0
+      min_longitude: -180.0
+      max_longitude: 180.0
+  
+  trip_update:
+    max_delay_seconds: 7200   # 2 hours max delay
+    min_delay_seconds: -3600  # 1 hour early max
+  
+  weather:
+    max_observation_age_seconds: 3600  # 1 hour
+
+# API configurations
+apis:
+  transitland:
+    base_url: "https://transit.land/api/v2"
+    rate_limit_requests_per_minute: 60
+    timeout_seconds: 30
+  
+  open_meteo:
+    base_url: "https://api.open-meteo.com/v1"
+    timeout_seconds: 10
+    variables:
+      - "temperature_2m"
+      - "precipitation"
+      - "windspeed_10m"
+      - "weathercode"
+
+# Polling intervals
+polling:
+  gtfs_realtime_seconds: 30      # Poll GTFS-RT every 30 seconds
+  weather_seconds: 300            # Poll weather every 5 minutes
+  static_gtfs_hours: 24           # Refresh static GTFS daily
+
+# Logging configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_dir: "logs"
+  max_bytes: 10485760  # 10MB
+  backup_count: 5
+
+# Dagster configuration
+dagster:
+  asset_materialization_interval_seconds: 60
+  max_concurrent_runs: 3
+  
+# Performance metrics
+metrics:
+  enable_prometheus: true
+  prometheus_port: 9090
+  collection_interval_seconds: 15
